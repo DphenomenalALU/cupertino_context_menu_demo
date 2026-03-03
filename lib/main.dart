@@ -1,121 +1,501 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const CupertinoContextMenuDemoApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class CupertinoContextMenuDemoApp extends StatelessWidget {
+  const CupertinoContextMenuDemoApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    return const CupertinoApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Cupertino Context Menu Demo',
+      home: ChatsHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class ChatsHomePage extends StatefulWidget {
+  const ChatsHomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<ChatsHomePage> createState() => _ChatsHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _ChatsHomePageState extends State<ChatsHomePage> {
+  final List<_ChatThread> _threads = List.generate(
+    8,
+    (i) => _ChatThread(
+      id: i + 1,
+      name: _ChatThread._names[i % _ChatThread._names.length],
+      lastMessage: _ChatThread._messages[i % _ChatThread._messages.length],
+      unreadCount: (i % 3 == 0) ? (i % 5) + 1 : 0,
+    ),
+  );
 
-  void _incrementCounter() {
+  bool _useCustomPreviewBuilder = true;
+  bool _showTrailingIcons = true;
+  bool _deleteIsDestructive = true;
+
+  void _showPropertiesSheet() {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: CupertinoPopupSurface(
+            child: Container(
+              color: CupertinoColors.systemGroupedBackground,
+              padding: const EdgeInsets.only(top: 12, bottom: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Demo properties',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Toggle these live, then long-press a chat row.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  CupertinoFormSection.insetGrouped(
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    children: [
+                      _toggleRow(
+                        title: 'CupertinoContextMenu.builder',
+                        value: _useCustomPreviewBuilder,
+                        onChanged: (v) =>
+                            setState(() => _useCustomPreviewBuilder = v),
+                      ),
+                      _toggleRow(
+                        title: 'CupertinoContextMenuAction.trailingIcon',
+                        value: _showTrailingIcons,
+                        onChanged: (v) =>
+                            setState(() => _showTrailingIcons = v),
+                      ),
+                      _toggleRow(
+                        title:
+                            'CupertinoContextMenuAction.isDestructiveAction',
+                        value: _deleteIsDestructive,
+                        onChanged: (v) =>
+                            setState(() => _deleteIsDestructive = v),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  CupertinoButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Done'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _toggleRow({
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return CupertinoFormRow(
+      prefix: Flexible(
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 15),
+        ),
+      ),
+      child: CupertinoSwitch(
+        value: value,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  void _pinThread(_ChatThread thread) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      thread.pinned = !thread.pinned;
+      _threads.sort((a, b) {
+        final pinnedCompare = (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0);
+        return pinnedCompare != 0 ? pinnedCompare : a.name.compareTo(b.name);
+      });
+    });
+  }
+
+  void _muteThread(_ChatThread thread) {
+    setState(() {
+      thread.muted = !thread.muted;
+    });
+  }
+
+  void _deleteThread(_ChatThread thread) {
+    setState(() {
+      _threads.removeWhere((t) => t.id == thread.id);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('Chats'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _showPropertiesSheet,
+          child: const Text('Props'),
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      child: SafeArea(
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text(
+                'Long-press a chat row to open the iOS-style context menu.',
+                style: TextStyle(color: CupertinoColors.systemGrey),
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.only(bottom: 24),
+                itemCount: _threads.length,
+                separatorBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 76),
+                    child: Container(
+                      height: 1,
+                      color: CupertinoColors.separator.resolveFrom(context),
+                    ),
+                  );
+                },
+                itemBuilder: (context, index) {
+                  final thread = _threads[index];
+                  final row = _ChatRow(thread: thread);
+                  final actions = <Widget>[
+                    CupertinoContextMenuAction(
+                      isDefaultAction: true,
+                      trailingIcon:
+                          _showTrailingIcons ? CupertinoIcons.pin : null,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _pinThread(thread);
+                      },
+                      child: Text(thread.pinned ? 'Unpin' : 'Pin'),
+                    ),
+                    CupertinoContextMenuAction(
+                      trailingIcon: _showTrailingIcons
+                          ? (thread.muted
+                              ? CupertinoIcons.bell
+                              : CupertinoIcons.bell_slash)
+                          : null,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _muteThread(thread);
+                      },
+                      child: Text(thread.muted ? 'Unmute' : 'Mute'),
+                    ),
+                    CupertinoContextMenuAction(
+                      isDestructiveAction: _deleteIsDestructive,
+                      trailingIcon:
+                          _showTrailingIcons ? CupertinoIcons.trash : null,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _deleteThread(thread);
+                      },
+                      child: const Text('Delete'),
+                    ),
+                  ];
+
+                  if (!_useCustomPreviewBuilder) {
+                    return CupertinoContextMenu(
+                      actions: actions,
+                      child: row,
+                    );
+                  }
+
+                  return CupertinoContextMenu.builder(
+                    actions: actions,
+                    builder: (context, animation) {
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, _) {
+                          final openInterval = CurvedAnimation(
+                            parent: animation,
+                            curve: const Interval(
+                              CupertinoContextMenu.animationOpensAt,
+                              1,
+                            ),
+                          );
+                          final borderRadius =
+                              BorderRadiusTween(
+                                begin: BorderRadius.circular(14),
+                                end: BorderRadius.circular(
+                                  CupertinoContextMenu.kOpenBorderRadius,
+                                ),
+                              ).transform(openInterval.value)!;
+
+                          final shadowOpacity = openInterval.value;
+                          return DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: borderRadius,
+                              boxShadow: [
+                                BoxShadow(
+                                  blurRadius: 24,
+                                  spreadRadius: -6,
+                                  offset: const Offset(0, 12),
+                                  color: CupertinoColors.black.withOpacity(
+                                    0.25 * shadowOpacity,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: borderRadius,
+                              child: _ChatPreviewCard(
+                                thread: thread,
+                                child: row,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+class _ChatThread {
+  _ChatThread({
+    required this.id,
+    required this.name,
+    required this.lastMessage,
+    required this.unreadCount,
+  });
+
+  final int id;
+  final String name;
+  final String lastMessage;
+  final int unreadCount;
+  bool pinned = false;
+  bool muted = false;
+
+  static const List<String> _names = [
+    'Ava',
+    'Ben',
+    'Carmen',
+    'Dylan',
+    'Eli',
+    'Fatima',
+    'Gabe',
+    'Hana',
+  ];
+
+  static const List<String> _messages = [
+    'Are we still on for tonight?',
+    'I sent the document—take a look.',
+    'On my way!',
+    'Can you review this PR?',
+    'Let’s grab coffee after class.',
+    'That sounds good to me.',
+  ];
+}
+
+class _ChatRow extends StatelessWidget {
+  const _ChatRow({required this.thread});
+
+  final _ChatThread thread;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = thread.muted
+        ? '${thread.lastMessage}  •  Muted'
+        : thread.lastMessage;
+    return Container(
+      color: CupertinoColors.systemBackground,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          _Avatar(name: thread.name),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        thread.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (thread.pinned) ...[
+                      const SizedBox(width: 8),
+                      const Icon(
+                        CupertinoIcons.pin,
+                        size: 16,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (thread.unreadCount > 0) ...[
+            const SizedBox(width: 12),
+            _UnreadBadge(count: thread.unreadCount),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatPreviewCard extends StatelessWidget {
+  const _ChatPreviewCard({required this.thread, required this.child});
+
+  final _ChatThread thread;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        child,
+        Container(
+          width: double.infinity,
+          color: CupertinoColors.secondarySystemBackground,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: DefaultTextStyle(
+            style: const TextStyle(
+              fontSize: 14,
+              color: CupertinoColors.label,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Preview',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text('• ${thread.lastMessage}'),
+                const SizedBox(height: 4),
+                Text('• (Earlier) “See you soon.”'),
+                const SizedBox(height: 4),
+                Text('• (Earlier) “Got it, thanks!”'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final background = _colorFor(name);
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        name.characters.first.toUpperCase(),
+        style: const TextStyle(
+          color: CupertinoColors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Color _colorFor(String input) {
+    const colors = [
+      CupertinoColors.activeBlue,
+      CupertinoColors.activeGreen,
+      CupertinoColors.activeOrange,
+      CupertinoColors.activePurple,
+      CupertinoColors.systemPink,
+      CupertinoColors.systemTeal,
+    ];
+    final index = input.codeUnits.fold<int>(0, (a, b) => a + b) % colors.length;
+    return colors[index];
+  }
+}
+
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemRed,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '$count',
+        style: const TextStyle(
+          color: CupertinoColors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
