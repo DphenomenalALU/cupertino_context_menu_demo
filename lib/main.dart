@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 
-bool demoUseCustomPreviewBuilder = true;
-bool demoShowTrailingIcons = true;
-bool demoDeleteIsDestructive = true;
+bool get demoUseCustomPreviewBuilder => true;
+bool get demoShowTrailingIcons => true;
+bool get demoDeleteIsDestructive => true;
 
 void main() {
   runApp(const CupertinoContextMenuDemoApp());
