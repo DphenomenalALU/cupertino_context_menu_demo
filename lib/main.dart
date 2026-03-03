@@ -1,8 +1,5 @@
 import 'package:flutter/cupertino.dart';
 
-// Live-demo flags:
-// Edit these values during class and hot-reload to show the default vs customized
-// behavior for the 3 widget properties.
 bool demoUseCustomPreviewBuilder = true;
 bool demoShowTrailingIcons = true;
 bool demoDeleteIsDestructive = true;
