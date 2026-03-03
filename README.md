@@ -33,4 +33,4 @@ Prereq: Flutter installed.
 ![Chats context menu demo](docs/screenshot.png)
 
 ## Presentation date
-In-class presentation date: __________________
+In-class presentation date: March 4, 2026 (Wednesday)
