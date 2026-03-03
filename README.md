@@ -33,4 +33,4 @@ Prereq: Flutter installed.
 ![Chats context menu demo](docs/screenshot.png)
 
 ## Presentation date
-Presented in class on: __________________
+In-class presentation date: __________________
