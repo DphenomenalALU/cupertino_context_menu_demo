@@ -30,7 +30,7 @@ Prereq: Flutter installed.
 2) Run: `flutter run`
 
 ## Screenshot
-![Chats context menu demo](docs/screenshot.png)
+![Chats context menu demo](./docs/screenshot.png)
 
 ## Presentation date
 In-class presentation date: March 4, 2026 (Wednesday)
