@@ -236,7 +236,7 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                         builder: (context, _) {
                           final openInterval = CurvedAnimation(
                             parent: animation,
-                            curve: const Interval(
+                            curve: Interval(
                               CupertinoContextMenu.animationOpensAt,
                               1,
                             ),
@@ -467,11 +467,12 @@ class _Avatar extends StatelessWidget {
       CupertinoColors.activeBlue,
       CupertinoColors.activeGreen,
       CupertinoColors.activeOrange,
-      CupertinoColors.activePurple,
+      CupertinoColors.systemPurple,
       CupertinoColors.systemPink,
       CupertinoColors.systemTeal,
     ];
-    final index = input.codeUnits.fold<int>(0, (a, b) => a + b) % colors.length;
+    final index =
+        input.codeUnits.fold<int>(0, (a, b) => a + b) % colors.length;
     return colors[index];
   }
 }
@@ -499,5 +500,4 @@ class _UnreadBadge extends StatelessWidget {
       ),
     );
   }
-}
 }
