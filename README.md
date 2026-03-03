@@ -5,8 +5,6 @@ Demo app for `CupertinoContextMenu` (iOS-style “long-press” context menu).
 ## What this demo shows (real use-case)
 This tiny app is a “Chats” list. Long-press a chat to open a context menu with quick actions like Pin, Mute, and Delete (similar to iOS Messages).
 
-Tap **Props** (top-right) to live-toggle the 3 attributes shown in the presentation.
-
 ## The 3 attributes (and what changes on-screen)
 1) `CupertinoContextMenu.builder`  
    - Default behavior: use the plain `child` as the preview.

@@ -1,5 +1,12 @@
 import 'package:flutter/cupertino.dart';
 
+// Live-demo flags:
+// Edit these values during class and hot-reload to show the default vs customized
+// behavior for the 3 widget properties.
+bool demoUseCustomPreviewBuilder = true;
+bool demoShowTrailingIcons = true;
+bool demoDeleteIsDestructive = true;
+
 void main() {
   runApp(const CupertinoContextMenuDemoApp());
 }
@@ -35,97 +42,6 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
     ),
   );
 
-  bool _useCustomPreviewBuilder = true;
-  bool _showTrailingIcons = true;
-  bool _deleteIsDestructive = true;
-
-  void _showPropertiesSheet() {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          top: false,
-          child: CupertinoPopupSurface(
-            child: Container(
-              color: CupertinoColors.systemGroupedBackground,
-              padding: const EdgeInsets.only(top: 12, bottom: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Demo properties',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Toggle these live, then long-press a chat row.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: CupertinoColors.systemGrey,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  CupertinoFormSection.insetGrouped(
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    children: [
-                      _toggleRow(
-                        title: 'CupertinoContextMenu.builder',
-                        value: _useCustomPreviewBuilder,
-                        onChanged: (v) =>
-                            setState(() => _useCustomPreviewBuilder = v),
-                      ),
-                      _toggleRow(
-                        title: 'CupertinoContextMenuAction.trailingIcon',
-                        value: _showTrailingIcons,
-                        onChanged: (v) =>
-                            setState(() => _showTrailingIcons = v),
-                      ),
-                      _toggleRow(
-                        title:
-                            'CupertinoContextMenuAction.isDestructiveAction',
-                        value: _deleteIsDestructive,
-                        onChanged: (v) =>
-                            setState(() => _deleteIsDestructive = v),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  CupertinoButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Done'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _toggleRow({
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return CupertinoFormRow(
-      prefix: Flexible(
-        child: Text(
-          title,
-          style: const TextStyle(fontSize: 15),
-        ),
-      ),
-      child: CupertinoSwitch(
-        value: value,
-        onChanged: onChanged,
-      ),
-    );
-  }
-
   void _pinThread(_ChatThread thread) {
     setState(() {
       thread.pinned = !thread.pinned;
@@ -153,11 +69,6 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Chats'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _showPropertiesSheet,
-          child: const Text('Props'),
-        ),
       ),
       child: SafeArea(
         child: Column(
@@ -190,7 +101,7 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                     CupertinoContextMenuAction(
                       isDefaultAction: true,
                       trailingIcon:
-                          _showTrailingIcons ? CupertinoIcons.pin : null,
+                          demoShowTrailingIcons ? CupertinoIcons.pin : null,
                       onPressed: () {
                         Navigator.of(context).pop();
                         _pinThread(thread);
@@ -198,7 +109,7 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                       child: Text(thread.pinned ? 'Unpin' : 'Pin'),
                     ),
                     CupertinoContextMenuAction(
-                      trailingIcon: _showTrailingIcons
+                      trailingIcon: demoShowTrailingIcons
                           ? (thread.muted
                               ? CupertinoIcons.bell
                               : CupertinoIcons.bell_slash)
@@ -210,9 +121,9 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                       child: Text(thread.muted ? 'Unmute' : 'Mute'),
                     ),
                     CupertinoContextMenuAction(
-                      isDestructiveAction: _deleteIsDestructive,
+                      isDestructiveAction: demoDeleteIsDestructive,
                       trailingIcon:
-                          _showTrailingIcons ? CupertinoIcons.trash : null,
+                          demoShowTrailingIcons ? CupertinoIcons.trash : null,
                       onPressed: () {
                         Navigator.of(context).pop();
                         _deleteThread(thread);
@@ -221,7 +132,7 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                     ),
                   ];
 
-                  if (!_useCustomPreviewBuilder) {
+                  if (!demoUseCustomPreviewBuilder) {
                     return CupertinoContextMenu(
                       actions: actions,
                       child: row,
